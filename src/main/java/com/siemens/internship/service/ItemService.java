@@ -1,5 +1,7 @@
-package com.siemens.internship;
+package com.siemens.internship.service;
 
+import com.siemens.internship.model.Item;
+import com.siemens.internship.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -7,29 +9,53 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Vector;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ItemService {
     @Autowired
     private ItemRepository itemRepository;
     private static ExecutorService executor = Executors.newFixedThreadPool(10);
-    private List<Item> processedItems = new ArrayList<>();
-    private int processedCount = 0;
+    private Vector<Item> processedItems = new Vector<>();
+    private AtomicInteger processedCount = new AtomicInteger(0);
 
 
+    /**
+     * Retrieves all items from the repository.
+     *
+     * @return a list of all items found in the repository
+     */
     public List<Item> findAll() {
         return itemRepository.findAll();
     }
 
+    /**
+     * Retrieves an item by its unique identifier.
+     *
+     * @param id the unique identifier of the item to be retrieved
+     * @return an Optional containing the Item if it exists, or an empty Optional if the item is not found
+     */
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
     }
 
+    /**
+     * Saves the given item to the repository.
+     *
+     * @param item the Item object to be saved
+     * @return the saved Item object
+     */
     public Item save(Item item) {
         return itemRepository.save(item);
     }
 
+    /**
+     * Deletes an item from the repository by its unique identifier.
+     *
+     * @param id the unique identifier of the item to be deleted
+     */
     public void deleteById(Long id) {
         itemRepository.deleteById(id);
     }
@@ -68,12 +94,11 @@ public class ItemService {
                         return;
                     }
 
-                    processedCount++;
+                    processedCount.incrementAndGet(); //
 
                     item.setStatus("PROCESSED");
                     itemRepository.save(item);
                     processedItems.add(item);
-
                 } catch (InterruptedException e) {
                     System.out.println("Error: " + e.getMessage());
                 }
